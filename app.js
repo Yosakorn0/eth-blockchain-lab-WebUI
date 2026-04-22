@@ -135,22 +135,21 @@ async function verifyHash() {
         return;
     }
 
-    if (!provider) {
-        provider = new ethers.JsonRpcProvider(RPC_URL);
-    }
+    // For verification, we always use the local RPC directly to ensure we find the transaction
+    const searchProvider = new ethers.JsonRpcProvider(RPC_URL);
 
     try {
         const btn = document.getElementById('verify-btn');
         btn.disabled = true;
         btn.innerText = 'Fetching...';
 
-        const tx = await provider.getTransaction(txHash);
+        const tx = await searchProvider.getTransaction(txHash);
         if (!tx) {
             alert("Transaction not found. Is it mined yet?");
             return;
         }
 
-        const block = await provider.getBlock(tx.blockNumber);
+        const block = await searchProvider.getBlock(tx.blockNumber);
         
         let decodedString = "No data found";
         let isContract = false;
