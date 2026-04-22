@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ethereum Data Stamper | Blockchain HW04</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Libraries via CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Ethereum Data Stamper</h1>
+            <p>Permanent & Verifiable Ledger for Your Assets</p>
+        </header>
+
+        <div id="status-container" class="status-bar disconnected">
+            <div>
+                <span class="dot"></span>
+                <span id="wallet-status">Wallet Not Connected</span>
+            </div>
+            <button id="connect-btn" style="width: auto; padding: 0.4rem 1rem; font-size: 0.8rem;">Connect MetaMask</button>
+        </div>
+
+        <main>
+            <!-- Phase A: The Stamper -->
+            <section class="card">
+                <h2>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="secondary"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    Phase A: The Stamper
+                </h2>
+                <div class="input-group">
+                    <label for="stamp-input">Data to Stamp (e.g. Property Serial Number)</label>
+                    <input type="text" id="stamp-input" placeholder="Enter string to register on blockchain...">
+                </div>
+                <button id="stamp-btn">Stamp to Blockchain</button>
+
+                <!-- Resulting QR Code Area -->
+                <div id="qr-result">
+                    <p class="result-label">Success! Transaction Hash:</p>
+                    <div id="tx-hash-display" style="font-size: 0.7rem; color: var(--text-dim); margin-bottom: 0.5rem;"></div>
+                    <canvas id="qr-canvas"></canvas>
+                    <p style="font-size: 0.8rem; color: var(--secondary);">Scan this QR to verify at any time</p>
+                </div>
+            </section>
+
+            <!-- Phase B: The Verifier -->
+            <section class="card">
+                <h2>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="primary"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    Phase B: The Verifier
+                </h2>
+                <div class="input-group">
+                    <label for="verify-input">Transaction Hash to Search</label>
+                    <input type="text" id="verify-input" placeholder="Paste 0x... hash here">
+                </div>
+                <button id="verify-btn">Verify Data</button>
+
+                <!-- Results Display -->
+                <div id="verification-details">
+                    <div class="result-field">
+                        <div class="result-label">Decoded Data <span class="badge" id="res-type">Standard</span></div>
+                        <div id="res-data" style="font-size: 1.2rem; color: white; font-weight: 600;">-</div>
+                    </div>
+                    <div class="result-field">
+                        <div class="result-label">Sender Address</div>
+                        <div id="res-sender" style="font-size: 0.8rem; color: var(--text-dim);">-</div>
+                    </div>
+                    <div class="result-field">
+                        <div class="result-label">Mined in Block</div>
+                        <div id="res-block" style="font-size: 0.8rem; color: var(--text-dim);">-</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer style="text-align: center; color: var(--text-dim); font-size: 0.75rem; padding-bottom: 2rem;">
+            Built with &lt;3 for Blockchain HW04 • 2026
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
