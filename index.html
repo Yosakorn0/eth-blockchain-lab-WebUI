@@ -19,6 +19,9 @@
         <header>
             <h1>Ethereum Data Stamper</h1>
             <p>Permanent & Verifiable Ledger for Your Assets</p>
+            <div style="font-size: 0.8rem; color: var(--success); margin-top: 5px;">
+                Node Status: <span class="loading">●</span> Mining at Block #<span id="block-height">0</span>
+            </div>
         </header>
 
         <div id="status-container" class="status-bar disconnected">
@@ -27,6 +30,21 @@
                 <span id="wallet-status">Wallet Not Connected</span>
             </div>
             <button id="connect-btn" style="width: auto; padding: 0.4rem 1rem; font-size: 0.8rem;">Connect MetaMask</button>
+        </div>
+
+        <!-- Mode Selector -->
+        <div class="mode-selector">
+            <label class="switch">
+                <input type="checkbox" id="mode-toggle">
+                <span class="slider round"></span>
+            </label>
+            <span id="mode-label">Mode: Standard (Self-Tx)</span>
+        </div>
+
+        <div id="contract-config" style="display: none; margin-bottom: 2rem;">
+            <label for="contract-address">Smart Contract Address</label>
+            <input type="text" id="contract-address" placeholder="Paste Deployed Contract Address (0x...)" class="input-field">
+            <p class="subtext">Deploy SimpleStamper.sol first to get this address.</p>
         </div>
 
         <main>
@@ -86,6 +104,7 @@
         </footer>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

@@ -1,5 +1,33 @@
+// SimpleStamper ABI for Bonus Phase
+const SIMPLE_STAMPER_ABI = [
+    {
+        "inputs": [{"internalType": "string", "name": "_data", "type": "string"}],
+        "name": "stamp",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "verify",
+        "outputs": [{"internalType": "string", "name": "", "type": "string"}],
+        "stateMutability": "pure",
+        "type": "function"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {"indexed": true, "internalType": "address", "name": "stamper", "type": "address"},
+            {"indexed": false, "internalType": "string", "name": "data", "type": "string"},
+            {"indexed": false, "internalType": "uint256", "name": "timestamp", "type": "uint256"}
+        ],
+        "name": "DataStamped",
+        "type": "event"
+    }
+];
+
 // Constants for the Campus Node
-const CHAIN_ID = "0x1112345"; // 1112345 in decimal
+const CHAIN_ID = "0x1112346"; // 1112346 in decimal
 const NETWORK_ID = 123454321;
 const RPC_URL = "http://127.0.0.1:8552";
 
@@ -14,14 +42,10 @@ async function connectWallet() {
     }
 
     try {
-        // Request accounts
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        
-        // Setup Ethers provider
         provider = new ethers.BrowserProvider(window.ethereum);
         signer = await provider.getSigner();
 
-        // Update UI
         document.getElementById('wallet-status').innerText = `Connected: ${accounts[0].substring(0,6)}...${accounts[0].substring(38)}`;
         document.getElementById('status-container').classList.add('connected');
         document.getElementById('status-container').classList.remove('disconnected');
@@ -37,8 +61,16 @@ async function connectWallet() {
 // Phase A: The Stamper
 async function stampData() {
     const inputString = document.getElementById('stamp-input').value;
+    const isBonusMode = document.getElementById('mode-toggle').checked;
+    const contractAddress = document.getElementById('contract-address').value.trim();
+
     if (!inputString) {
         alert("Please enter some data to stamp.");
+        return;
+    }
+
+    if (isBonusMode && !ethers.isAddress(contractAddress)) {
+        alert("Please enter a valid Contract Address for Bonus Mode.");
         return;
     }
 
@@ -53,40 +85,38 @@ async function stampData() {
         btn.disabled = true;
         btn.innerHTML = '<span class="loading">Mining...</span>';
 
-        // 1. Convert string to Hex
-        const hexData = ethers.hexlify(ethers.toUtf8Bytes(inputString));
+        let response;
 
-        // 2. Prepare Self-Transaction
-        const tx = {
-            to: userAddress,
-            value: 0,
-            data: hexData
-        };
+        if (isBonusMode) {
+            // BONUS: Smart Contract Call
+            const contract = new ethers.Contract(contractAddress, SIMPLE_STAMPER_ABI, signer);
+            response = await contract.stamp(inputString);
+        } else {
+            // STANDARD: Self-Transaction with Hex Data
+            const hexData = ethers.hexlify(ethers.toUtf8Bytes(inputString));
+            const tx = {
+                to: "0x1111111111111111111111111111111111111111",
+                value: 0,
+                data: hexData
+            };
+            response = await signer.sendTransaction(tx);
+        }
 
-        // 3. Send Transaction
-        const response = await signer.sendTransaction(tx);
         console.log("TX Sent:", response.hash);
-
-        // 4. Wait for it to be mined
         const receipt = await response.wait();
         
-        // 5. Success UI
+        // Success UI
         document.getElementById('qr-result').style.display = 'block';
         document.getElementById('tx-hash-display').innerText = response.hash;
         
-        // Generate QR Code
-        QRCode.toCanvas(document.getElementById('qr-canvas'), response.hash, {
-            width: 200,
-            margin: 2,
-            color: {
-                dark: '#0d0e14',
-                light: '#ffffff'
-            }
-        }, function (error) {
-            if (error) console.error(error);
-        });
+        if (typeof QRCode !== 'undefined') {
+            QRCode.toCanvas(document.getElementById('qr-canvas'), response.hash, {
+                width: 200, margin: 2,
+                color: { dark: '#0d0e14', light: '#ffffff' }
+            }, (error) => { if (error) console.error(error); });
+        }
 
-        alert("Data successfully stamped onto the blockchain!");
+        alert(`Data successfully stamped via ${isBonusMode ? 'Smart Contract' : 'Self-Transaction'}!`);
     } catch (error) {
         console.error("Stamping failed", error);
         alert("Transaction failed: " + error.message);
@@ -114,38 +144,41 @@ async function verifyHash() {
         btn.disabled = true;
         btn.innerText = 'Fetching...';
 
-        // 1. Fetch Transaction
         const tx = await provider.getTransaction(txHash);
         if (!tx) {
             alert("Transaction not found. Is it mined yet?");
             return;
         }
 
-        // 2. Fetch Block for timestamp
         const block = await provider.getBlock(tx.blockNumber);
-
-        // 3. Decode Data
+        
         let decodedString = "No data found";
-        if (tx.data && tx.data !== '0x') {
+        let isContract = false;
+
+        // Logic check: Is it a contract call or standard tx?
+        // SimpleStamper 'stamp' method ID is 0xe3e63558 (first 4 bytes of keccak256("stamp(string)"))
+        if (tx.data.startsWith('0xe3e63558')) {
+            isContract = true;
+            // Decode contract parameters
+            const iface = new ethers.Interface(SIMPLE_STAMPER_ABI);
+            const decoded = iface.decodeFunctionData("stamp", tx.data);
+            decodedString = decoded[0];
+        } else if (tx.data && tx.data !== '0x') {
+            // Standard HEX decoding
             decodedString = ethers.toUtf8String(tx.data);
         }
 
-        // 4. Update UI
         document.getElementById('verification-details').style.display = 'block';
         document.getElementById('res-data').innerText = decodedString;
         document.getElementById('res-sender').innerText = tx.from;
         document.getElementById('res-block').innerText = `${tx.blockNumber} (at ${new Date(block.timestamp * 1000).toLocaleString()})`;
         
-        // Bonus points check: contract interaction?
-        if (tx.to && tx.to !== tx.from) {
-            document.getElementById('res-type').innerText = 'Smart Contract Call';
-        } else {
-            document.getElementById('res-type').innerText = 'Standard Self-Transaction';
-        }
+        document.getElementById('res-type').innerText = isContract ? 'Smart Contract Call' : 'Standard Self-Transaction';
+        document.getElementById('res-type').className = isContract ? 'badge bonus-badge' : 'badge';
 
     } catch (error) {
         console.error("Verification failed", error);
-        alert("Error: " + error.message);
+        alert("Error decoding data: " + error.message);
     } finally {
         const btn = document.getElementById('verify-btn');
         btn.disabled = false;
@@ -153,9 +186,33 @@ async function verifyHash() {
     }
 }
 
-// Listeners
+// UI Listeners
 window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('connect-btn').addEventListener('click', connectWallet);
     document.getElementById('stamp-btn').addEventListener('click', stampData);
     document.getElementById('verify-btn').addEventListener('click', verifyHash);
+
+    // Toggle Handler
+    document.getElementById('mode-toggle').addEventListener('change', (e) => {
+        const label = document.getElementById('mode-label');
+        const config = document.getElementById('contract-config');
+        if (e.target.checked) {
+            label.innerText = "Mode: Bonus (Smart Contract)";
+            config.style.display = 'block';
+        } else {
+            label.innerText = "Mode: Standard (Self-Tx)";
+            config.style.display = 'none';
+        }
+    });
+    // Block Tracker
+    setInterval(async () => {
+        if (!provider) {
+            provider = new ethers.JsonRpcProvider(RPC_URL);
+        }
+        try {
+            const blockNum = await provider.getBlockNumber();
+            const el = document.getElementById('block-height');
+            if (el) el.innerText = blockNum;
+        } catch (e) {}
+    }, 3000);
 });

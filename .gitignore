@@ -1,1 +1,7 @@
 /docs
+*.pdf
+*.txt
+/geth
+/keystore
+.jwtsecret
+password.txt

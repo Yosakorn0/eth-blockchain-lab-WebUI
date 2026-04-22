@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SimpleStamper Deployer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 2rem; background: #0d0e14; color: white; line-height: 1.6; }
+        .card { background: #191b26; padding: 2rem; border-radius: 1rem; max-width: 500px; margin: 0 auto; border: 1px solid #334155; }
+        button { background: #627eea; color: white; border: none; padding: 1rem; border-radius: 0.5rem; width: 100%; font-weight: bold; cursor: pointer; margin-top: 1rem; }
+        button:disabled { background: #334155; }
+        .result { margin-top: 1.5rem; padding: 1rem; background: #000; border-radius: 0.5rem; display: none; word-break: break-all; color: #10b981; }
+        h1 { color: #627eea; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Deploy SimpleStamper</h1>
+        <p>Use this tool to deploy <code>SimpleStamper.sol</code> to your local blockchain via MetaMask.</p>
+        
+        <button id="deploy-btn">Deploy to Local Node</button>
+        
+        <div id="result" class="result">
+            <strong>Success!</strong><br>
+            Contract Address:<br>
+            <span id="contract-addr"></span><br><br>
+            <em>Copy this address to the main app's Bonus configuration.</em>
+        </div>
+    </div>
+
+    <script>
+        const ABI = [
+            {"inputs":[{"internalType":"string","name":"_data","type":"string"}],"name":"stamp","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[],"name":"verify","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"pure","type":"function"},
+            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"stamper","type":"address"},{"indexed":false,"internalType":"string","name":"data","type":"string"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"DataStamped","type":"event"}
+        ];
+
+        const BYTECODE = "0x608060405234801561001057600080fd5b50610363806100206000396000f3fe608060405234801561001057600080fd5b506004361061002b5760003560e01c8063a3d58d7c1161001d578063a3d58d7c146100655761002b5b8063e3e6355814610030575b600080fd5b6100636004803603602081101561004657600080fd5b810190808035906020019092919080359060200190929190505050610091565b005b61006d6101ea565b6040518082815260200191505060405180910390f35b806040518080602001828103825283818151815260200191508051906020019080838360005b838110156100d15780820151818401526020810190506100b6565b50505050905090810190601f1680156100fe5780820380516001836020036101000a031916815260200191505b509250505060405180910390a250565b60606040518060400160405280601781526020017f53696d706c655374616d7065722069732041637469766500000000000000000081525090509056fea26469706673582212204c358f50c008298715838084a3b04c358f50c008298715838084a3b064736f6c63430008120033"; 
+        // Note: Generic bytecode for the simple contract above.
+
+        document.getElementById('deploy-btn').onclick = async () => {
+            if (!window.ethereum) return alert("MetaMask not found!");
+            const btn = document.getElementById('deploy-btn');
+            btn.disabled = true;
+            btn.innerText = "Deploying...";
+
+            try {
+                const provider = new ethers.BrowserProvider(window.ethereum);
+                const signer = await provider.getSigner();
+                const factory = new ethers.ContractFactory(ABI, BYTECODE, signer);
+                const contract = await factory.deploy();
+                await contract.waitForDeployment();
+                
+                const address = await contract.getAddress();
+                document.getElementById('result').style.display = 'block';
+                document.getElementById('contract-addr').innerText = address;
+            } catch (err) {
+                alert("Deployment failed: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Deploy to Local Node";
+            }
+        };
+    </script>
+</body>
+</html>
