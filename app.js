@@ -90,7 +90,7 @@ async function stampData() {
         if (isBonusMode) {
             // BONUS: Smart Contract Call
             const contract = new ethers.Contract(contractAddress, SIMPLE_STAMPER_ABI, signer);
-            response = await contract.stamp(inputString);
+            response = await contract.stamp(inputString, { gasLimit: 1000000 });
         } else {
             // STANDARD: Self-Transaction with Hex Data
             const hexData = ethers.hexlify(ethers.toUtf8Bytes(inputString));
@@ -157,7 +157,7 @@ async function verifyHash() {
 
         // Logic check: Is it a contract call or standard tx?
         // SimpleStamper 'stamp' method ID is 0xe3e63558 (first 4 bytes of keccak256("stamp(string)"))
-        if (tx.data.startsWith('0xe3e63558')) {
+        if (tx.data.startsWith('0xf63c82fb')) {
             isContract = true;
             // Decode contract parameters
             const iface = new ethers.Interface(SIMPLE_STAMPER_ABI);

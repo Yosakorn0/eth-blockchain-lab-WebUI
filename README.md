@@ -104,3 +104,20 @@ npx http-server . -p 8080 .
 
 > [!IMPORTANT]
 > **Account Balance**: You must have some ETH (or ilabcoin) in your account to stamp data. If your balance is 0, start Geth with `--mine` and a valid etherbase to generate coins, or request some from the network admin.
+
+---
+
+## 🏆 Final Submission Proof
+
+Successfully completed the **Ethereum Data Stamper** with the **Bonus Smart Contract Challenge**.
+
+### ⛓️ Blockchain Proof
+- **Transaction Hash**: `0x92f04a43cdc2eed5b8c310c232163d3ff71266ff1f3f6248b8d736e41fa21575`
+- **Contract Address**: `0x8CFa2f42530CEa035db7608d89D358FC9f587762`
+- **Data Stamped**: `"Property of Yosakorn #126512"`
+- **Account Used**: `0x0c0e003d4d66fa9e9c48cd766bcea38b0b18660f`
+
+### 🖼️ Verification Screenshot
+![Final Verification Result](final_proof.png)
+
+*Note: The image above shows the DApp successfully decoding the custom data and identifying it as a Smart Contract call.*

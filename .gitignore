@@ -5,3 +5,4 @@
 /keystore
 .jwtsecret
 password.txt
+node_modules/
